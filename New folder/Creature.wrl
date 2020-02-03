@@ -1,0 +1,169 @@
+#VRML V2.0 utf8
+
+# The following EXTERNPROTO definitins remain the same for all FVRML scenes.
+
+EXTERNPROTO FGeometry [
+	exposedField SFString definition
+	exposedField MFFloat parameters
+	exposedField MFInt32 resolution
+	exposedField SFVec3f bboxCenter
+	exposedField SFVec3f bboxSize
+	exposedField SFString type
+	exposedField MFNode	parents
+	exposedField SFVec2f timeSpan
+] "http://www3.ntu.edu.sg/home/assourin/FVRML/FVRML.wrl#FGeometry"
+EXTERNPROTO FMaterial [
+	exposedField SFString diffuseColor
+	exposedField SFString type
+	exposedField MFColor patternColor
+	exposedField MFFloat patternKey
+	exposedField SFString ambientIntensity
+	exposedField SFString emissiveColor
+	exposedField SFString shininess
+	exposedField SFString specularColor
+	exposedField SFString transparency
+	exposedField MFFloat parameters
+	exposedField MFNode	parents
+	exposedField SFVec2f timeSpan
+] "http://www3.ntu.edu.sg/home/assourin/FVRML/FVRML.wrl#FMaterial"
+EXTERNPROTO FTexture3D [
+	exposedField SFString definition
+	exposedField SFString type
+	exposedField MFFloat parameters
+	exposedField MFNode	parents
+	exposedField SFVec2f timeSpan
+] "http://www3.ntu.edu.sg/home/assourin/FVRML/FVRML.wrl#FTexture3D"
+EXTERNPROTO FAppearance [
+	exposedField SFNode	material
+	exposedField SFNode	texture
+	exposedField SFNode	textureTransform
+	exposedField SFNode	texture3D
+	exposedField MFNode	parents
+	eventIn	SFBool refresh
+] "http://www3.ntu.edu.sg/home/assourin/FVRML/FVRML.wrl#FAppearance"
+EXTERNPROTO FShape [
+	exposedField SFNode	geometry
+	exposedField SFNode	appearance
+	exposedField SFString polygonizer
+	exposedField MFNode	parents
+	exposedField SFTime	startTime
+	exposedField SFTime stopTime
+    exposedField SFTime cycleInterval
+    exposedField SFBool	loop
+	exposedField SFBool	enabled
+	eventOut SFTime	cycleTime
+	eventIn SFFloat set_fraction
+	field SFInt32 frames
+] "http://www3.ntu.edu.sg/home/assourin/FVRML/FVRML.wrl#FShape"
+EXTERNPROTO FTransform [
+	exposedField SFString operation
+	exposedField SFString type
+	exposedField SFString polygonizer
+	exposedField MFFloat parameters
+	exposedField SFString center
+	exposedField SFString rotation
+	exposedField SFString scale
+	exposedField SFString scaleOrientation
+	exposedField SFString translation
+	exposedField MFNode children
+	exposedField MFNode	parents
+	eventIn	SFBool refresh
+    exposedField SFVec2f timeSpan
+	exposedField SFTime	startTime
+	exposedField SFTime stopTime
+    exposedField SFTime cycleInterval
+    exposedField SFBool	loop
+	exposedField SFBool	enabled
+	eventOut SFTime	cycleTime
+	eventIn SFFloat set_fraction
+	field SFInt32 frames
+] "http://www3.ntu.edu.sg/home/assourin/FVRML/FVRML.wrl#FTransform"
+
+Background {
+  skyColor      [0.5, 0.7, 1]
+}
+
+Viewpoint {
+fieldOfView 1
+position 0 3 10
+orientation 0 0 1 0
+}
+
+# External VRML object "coordinate system" is included in the scene
+#Transform {
+#	scale 5 5 5
+#	children [
+# Inline {url "http://www3.ntu.edu.sg/home/assourin/FVRML/CoordinateAxes.wrl"}
+#]}
+
+FShape {
+cycleInterval 3
+loop TRUE
+geometry FGeometry {
+
+# Function script defining the CSG solid. 
+# Change to some other formulae to see how the solid geometry changes 
+# based on the parameters domain and the sampling resolution defined below
+	definition "function frep(x,y,z,t){
+	head=1^2-(x-0.7)^2-(y-4)^2-(z)^2;
+	bottom=1-(x-0.7)^2-((y-2)/2)^2-(z)^2;
+	body=max(head, bottom);
+	
+	tail = (x-0.7)^2 + (y-1)^2 - ((z*0.2)+0.5)^2;
+	slice1= z;
+	slice2 = z+2;
+	
+	tailfinal = max(max(tail,slice1),-slice2);
+	
+	fig = min(tailfinal,-body);
+	
+	ant1 = 0.2^2 - (x-0.3)^2 - (y-5)^2 - (z-0.3)^2;
+	ant2 = 0.2^2 - (x-1.2)^2 - (y-5)^2 - (z-0.3)^2;
+	
+	eye1 = 0.3^2 - (x-0.3)^2 - (y-4.5)^2;
+	eye2 = 0.3^2 - (x-1.2)^2 - (y-4.5)^2;
+	cut1 = z-1.2;
+	cut2 = z+0.5;
+	
+	eyes = max(eye1, eye2);
+	
+	eyesfinal = min(min(eyes,-cut1), cut2);
+	
+	
+	merge1 = min(fig,-ant1);
+	merge2 = min(merge1, -ant2);
+	
+	arm1 = 1-(x+1.2)^2-((y-2.3)/1.5)^2-(z/0.4)^2;
+	arm2 = 1-(x-2.7)^2-((y-2.3)/1.5)^2-(z/0.4)^2;
+	
+	final = min(merge2, -eyesfinal);
+	
+	final_1 = min(min(final,-arm1),-arm2);
+	
+	return final_1;}"
+
+# Adjust the tight bounding box and an optimal resolution
+bboxCenter 0 0 0
+bboxSize 11 11 11
+resolution [70 70 70]
+
+ }     
+
+appearance FAppearance {
+material FMaterial {
+		    specularColor "r=0.2;g=0.3;b=0.1;"
+			shininess "0.5"
+			diffuseColor "function frep(x1,y1,z1,t){
+				u=x1+(0);
+				v=y1;
+				w=z1+(0);
+				
+				r=sin(t*pi*u*3);
+				g= 1-sin(t*pi);
+				b=sin(0.3*w);
+				return 0;}"
+
+		}    }
+}
+
+
